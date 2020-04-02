@@ -21,8 +21,15 @@ public class Client implements Runnable {
                     .bufferedReader(new BufferedReader(new InputStreamReader(socket.getInputStream())))
                     .build();
 
-            System.out.println("INPUT =======");
-            System.out.println(request.getInputRequest());
+            System.out.println("INPUT  ======");
+
+            String headerLine = null;
+            while ((headerLine = request.getInputRequest()).length() != 0) {
+                System.out.println(headerLine);
+            }
+
+            System.out.println("PATH  ======");
+            System.out.println("HEADERS ======");
 
             final Response response = Response.builder()
                     .bufferedOutputStream(new BufferedOutputStream(socket.getOutputStream()))
