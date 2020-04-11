@@ -7,7 +7,7 @@ public class Netxio {
 
     public static void main(String[] args) {
         ServerOptions serverOptions = ServerOptions.builder()
-                .port(8082)
+                .port(8081)
                 .build();
 
         Server server = new Server(serverOptions);

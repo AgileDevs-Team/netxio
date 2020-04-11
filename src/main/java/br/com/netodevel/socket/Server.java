@@ -1,9 +1,12 @@
 package br.com.netodevel.socket;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Date;
 
+@Slf4j
 public class Server {
 
     private final ServerOptions serverOptions;
@@ -15,18 +18,18 @@ public class Server {
     public void start() {
         try {
             ServerSocket serverSocket = createServerSocket();
-            System.out.println("Server started!");
+            log.info("Starting HttpServer at http://127.0.0.1:" + serverOptions.getPort());
 
             openConnections(serverSocket);
         } catch (IOException e) {
-            System.out.println("error = " + e.getMessage());
+            log.error(e.getMessage());
         }
     }
 
     private void openConnections(ServerSocket serverSocket) throws IOException {
         while (true) {
             Client client = new Client(serverSocket.accept());
-            System.out.println("connection opened: " + new Date());
+            log.info("open to clients, date = {}", new Date());
 
             Thread thread = new Thread(client);
             thread.start();

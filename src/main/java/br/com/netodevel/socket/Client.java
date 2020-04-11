@@ -1,11 +1,19 @@
 package br.com.netodevel.socket;
 
+import br.com.netodevel.http.HttpExchange;
 import br.com.netodevel.http.Request;
 import br.com.netodevel.http.Response;
+import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
+@Slf4j
 public class Client implements Runnable {
 
     private final Socket socket;
@@ -15,21 +23,34 @@ public class Client implements Runnable {
     }
 
     public void run() {
-        System.out.println("execute connection --->");
+        log.info("execute connection");
         try {
-            final Request request = Request.builder()
-                    .bufferedReader(new BufferedReader(new InputStreamReader(socket.getInputStream())))
-                    .build();
+            HttpExchange exchange = new HttpExchange();
 
-            System.out.println("INPUT  ======");
+            BufferedReader input = exchange.getInput(socket);
 
-            String headerLine = null;
-            while ((headerLine = request.getInputRequest()).length() != 0) {
-                System.out.println(headerLine);
+            String firstLine = input.readLine();
+
+            while (firstLine.isEmpty()) {
+                firstLine = input.readLine();
             }
 
-            System.out.println("PATH  ======");
-            System.out.println("HEADERS ======");
+            String[] firstSplit = firstLine.split(" ");
+
+            final String method = firstSplit[0];
+            final String url = firstSplit[1];
+            final String httpVersion = firstSplit[2];
+
+            Map<String, String> headers = getHeaders(input);
+
+            final Request request = Request.builder()
+                    .url(url)
+                    .method(method)
+                    .httpVersion(httpVersion)
+                    .headers(headers)
+                    .build();
+
+            System.out.println(request);
 
             final Response response = Response.builder()
                     .bufferedOutputStream(new BufferedOutputStream(socket.getOutputStream()))
@@ -39,7 +60,17 @@ public class Client implements Runnable {
             response.defaultResponse("application/json", "{json_fake}");
 
         } catch (IOException e) {
-            System.out.println("error = " + e.getMessage());
+            log.error(e.getMessage());
         }
     }
+
+    private Map<String, String> getHeaders(BufferedReader input) throws IOException {
+        Map<String, String> headers = new HashMap<>();
+        for (String line = input.readLine(); line != null && !line.isEmpty(); line = input.readLine()) {
+            String[] splitLine = line.split(":");
+            headers.put(splitLine[0], splitLine[1]);
+        }
+        return headers;
+    }
+
 }
